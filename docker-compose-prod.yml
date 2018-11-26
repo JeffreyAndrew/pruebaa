@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+
+  smartphones:
+    build:
+      context: ./services/smartphones
+      dockerfile: Dockerfile-prod
+    expose:
+      - 5000
+    environment:
+      - FLASK_ENV=production
+      - APP_SETTINGS=project.config.ProductionConfig
+      - DATABASE_URL=postgres://postgres:postgres@smartphones-db:5432/smartphones_prod
+      - DATABASE_TEST_URL=postgres://postgres:postgres@smartphones-db:5432/smartphones_test
+    depends_on:  # <-- nuevo
+      - smartphones-db
+
+  smartphones-db:  # <-- nuevo
+    build:
+      context: ./services/smartphones/project/db
+      dockerfile: Dockerfile
+    ports:
+      - 5435:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  nginx:
+    build:
+      context: ./services/nginx
+      dockerfile: Dockerfile-prod
+    restart: always
+    ports:
+      - 80:80
+    depends_on:
+      - smartphones
+
